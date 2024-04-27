@@ -144,11 +144,10 @@ export function createValidator<
 
   function setValues(newValues: TValue) {
     const v = flatten<GenericObject, GenericObject>(newValues);
-    const t = toTouched(v);
 
     touched = {
       ...touched,
-      ...t,
+      ...toTouched(v),
     };
 
     values = {
