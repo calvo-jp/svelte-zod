@@ -184,7 +184,7 @@ export function createValidator<
   }
 
   function reset() {
-    values = flatten(defaultValues);
+    values = defaultValues;
     errors = {};
     touched = {};
     isSubmitting = false;
