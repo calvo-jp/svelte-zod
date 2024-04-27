@@ -50,16 +50,23 @@ export function createValidator<
   TError extends GenericObject = DeepReplaceTypes<TSchema, string>,
   TTouched extends GenericObject = DeepReplaceTypes<TSchema, boolean>,
   TDefaultValue extends GenericObject = DeepPartial<TSchema>,
->({
-  /**/
-  schema,
-  onSubmit,
-  defaultValues,
-}: CreateValidatorConfig<TSchema, TZodSchema, TDefaultValue>) {
-  let values: GenericObject = $state.frozen(flatten(defaultValues));
+>(config: CreateValidatorConfig<TSchema, TZodSchema, TDefaultValue>) {
+  const {
+    /**/
+    schema,
+    onSubmit,
+    defaultValues,
+  } = $derived.by(() => {
+    return {
+      schema: config.schema,
+      onSubmit: config.onSubmit ?? function noop() {},
+      defaultValues: config.defaultValues ? flatten(config.defaultValues) : {},
+    };
+  });
+
+  let values: GenericObject = $state.frozen(defaultValues);
   let touched: GenericObject = $state.frozen({});
   let errors: GenericObject = $state.frozen({});
-
   let isSubmitting = $state(false);
 
   $effect(function handleErrors() {
