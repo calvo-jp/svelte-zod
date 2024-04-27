@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-const */
 
+import { tick } from 'svelte';
 import { z } from 'zod';
 import { flatten, unflatten } from './flat.js';
 
@@ -81,6 +82,8 @@ export function createValidator<
     return {
       nonvalidate: true,
       async onsubmit(e: SubmitEvent) {
+        await tick();
+
         if (isSubmitting) return e.preventDefault();
         if (hasErrors) return e.preventDefault();
 
