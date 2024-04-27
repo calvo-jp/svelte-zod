@@ -187,6 +187,7 @@ export function createValidator<
     values = flatten(defaultValues ?? {});
     errors = {};
     touched = {};
+    isSubmitting = false;
   }
 
   return {
