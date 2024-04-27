@@ -10,6 +10,7 @@
   let v = createValidator({
     schema,
     onSubmit(d) {
+      console.log('Success!');
       console.log(d);
     },
     defaultValues: {

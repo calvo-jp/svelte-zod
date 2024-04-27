@@ -68,19 +68,20 @@ export function createValidator<
   let _errors: GenericObject = $state.frozen({});
 
   const errors: GenericObject = $derived.by(() => {
-    const d = schema.safeParse(unflatten(values));
-    const e: GenericObject = {};
+    const parseResult = schema.safeParse(unflatten(values));
+    const mergedErrors = {
+      ..._errors,
+    };
 
-    d.error?.errors.forEach((o) => {
-      if (touched[o.path.toString()] === true) {
-        e[o.path.toString()] = o.message;
+    parseResult.error?.errors.forEach((obj) => {
+      const key = obj.path.toString();
+
+      if (touched[key]) {
+        mergedErrors[key] = obj.message;
       }
     });
 
-    return {
-      ..._errors,
-      ...e,
-    };
+    return mergedErrors;
   });
 
   function form(props?: Record<string, any>) {
@@ -88,6 +89,8 @@ export function createValidator<
       ...props,
       novalidate: true,
       async onsubmit(event: SubmitEvent) {
+        touched = toTouched(values);
+
         await tick();
 
         props?.onsubmit?.(event);
