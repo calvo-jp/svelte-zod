@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { tick } from 'svelte';
@@ -27,30 +26,28 @@ type DeepReplaceTypes<T extends GenericObject, R> = T extends GenericObject
     }
   : R;
 
-interface OnSubmitContext {
-  reset: () => void;
-}
-
-type OnSubmitHandler<TData> = (
-  data: TData,
-  context: OnSubmitContext,
-) => void | Promise<void>;
-
-interface CreateValidatorConfig<TData, TZodSchema, TDefaultValue> {
-  schema: TZodSchema;
-  onSubmit?: OnSubmitHandler<TData>;
-  defaultValues?: TDefaultValue;
-}
-
 export function createValidator<
-  TZodSchema extends z.ZodObject<{}>,
+  TZodSchema extends z.ZodObject<z.ZodRawShape>,
   TSchema extends GenericObject = z.infer<TZodSchema>,
   TKey extends string = FlattenObjectKeys<TSchema>,
   TValue extends GenericObject = DeepPartial<TSchema>,
   TError extends GenericObject = DeepReplaceTypes<TSchema, string>,
   TTouched extends GenericObject = DeepReplaceTypes<TSchema, boolean>,
   TDefaultValue extends GenericObject = DeepPartial<TSchema>,
->(config: CreateValidatorConfig<TSchema, TZodSchema, TDefaultValue>) {
+>(config: {
+  schema: TZodSchema;
+  defaultValues?: TDefaultValue;
+  onSubmit?: (
+    data: TSchema,
+    context: {
+      reset: () => void;
+      setError: (key: TKey, message: string) => void;
+      setValue: (key: TKey, value: unknown) => void;
+      setErrors: (errors: TError) => void;
+      setValues: (values: TValue) => void;
+    },
+  ) => void | Promise<void>;
+}) {
   const {
     /**/
     schema,
@@ -85,7 +82,7 @@ export function createValidator<
 
   function form() {
     return {
-      nonvalidate: true,
+      novalidate: true,
       async onsubmit(e: SubmitEvent) {
         await tick();
 
@@ -99,6 +96,10 @@ export function createValidator<
 
           await onSubmit(unflatten<GenericObject, TSchema>(values), {
             reset,
+            setValue,
+            setValues,
+            setError,
+            setErrors,
           });
 
           isSubmitting = false;
@@ -107,10 +108,20 @@ export function createValidator<
     };
   }
 
-  function field(key: TKey) {
+  function field(key: TKey, userProps?: { [key: string]: any }) {
     return {
+      ...userProps,
       value: values[key],
-      oninput(e: Event & { currentTarget: { value: string } }) {
+      oninput(
+        event: Event & {
+          currentTarget: {
+            value: string;
+            [key: string]: any;
+          };
+        },
+      ) {
+        userProps?.oninput?.(event);
+
         touched = {
           ...touched,
           [key]: true,
@@ -118,10 +129,19 @@ export function createValidator<
 
         values = {
           ...values,
-          [key]: e.currentTarget.value,
+          [key]: event.currentTarget.value,
         };
       },
-      onblur() {
+      onblur(
+        event: FocusEvent & {
+          currentTarget: {
+            value: string;
+            [key: string]: any;
+          };
+        },
+      ) {
+        userProps?.onblur?.(event);
+
         touched = {
           ...touched,
           [key]: true,
@@ -130,7 +150,7 @@ export function createValidator<
     };
   }
 
-  function setValue(key: TKey, value: any) {
+  function setValue(key: TKey, value: unknown) {
     touched = {
       ...touched,
       [key]: true,
