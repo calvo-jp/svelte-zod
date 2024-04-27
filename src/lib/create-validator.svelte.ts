@@ -135,15 +135,15 @@ export function createValidator<
   }
 
   function setValues(newValues: V) {
-    let e = flatten(newValues) as GenericObject;
-    let v = Object.keys(e).reduce<{ [key: string]: boolean }>((o, key) => {
+    let v = flatten(newValues) as GenericObject;
+    let t = Object.keys(v).reduce<{ [key: string]: boolean }>((o, key) => {
       o[key] = true;
       return o;
     }, {});
 
     touched = {
       ...touched,
-      ...v,
+      ...t,
     };
 
     values = {
