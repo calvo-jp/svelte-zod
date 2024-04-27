@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable prefer-const */
 
 import { tick } from 'svelte';
 import { z } from 'zod';
@@ -62,7 +61,6 @@ export function createValidator<
   let errors: GenericObject = $state.frozen({});
 
   let isSubmitting = $state(false);
-  let hasErrors = $derived(Object.values(errors).some(Boolean));
 
   $effect(function handleErrors() {
     const v = unflatten(values);
@@ -85,14 +83,14 @@ export function createValidator<
         await tick();
 
         if (isSubmitting) return e.preventDefault();
-        if (hasErrors) return e.preventDefault();
+        if (Object.values(errors).some(Boolean)) return e.preventDefault();
 
         if (onSubmit) {
           e.preventDefault();
 
           isSubmitting = true;
 
-          await onSubmit(values as TSchema, {
+          await onSubmit(unflatten<GenericObject, TSchema>(values), {
             reset,
           });
 
@@ -133,8 +131,8 @@ export function createValidator<
   }
 
   function setValues(newValues: TValue) {
-    let v = flatten<GenericObject, GenericObject>(newValues);
-    let t = Object.keys(v).reduce<Record<string, boolean>>((o, k) => {
+    const v = flatten<GenericObject, GenericObject>(newValues);
+    const t = Object.keys(v).reduce<Record<string, boolean>>((o, k) => {
       o[k] = true;
       return o;
     }, {});
@@ -163,8 +161,8 @@ export function createValidator<
   }
 
   function setErrors(newErrors: TError) {
-    let e = flatten<GenericObject, GenericObject>(newErrors);
-    let t = Object.keys(e).reduce<Record<string, boolean>>((o, k) => {
+    const e = flatten<GenericObject, GenericObject>(newErrors);
+    const t = Object.keys(e).reduce<Record<string, boolean>>((o, k) => {
       o[k] = true;
       return o;
     }, {});
