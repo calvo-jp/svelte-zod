@@ -89,7 +89,7 @@ export function createValidator<
 
           isSubmitting = true;
 
-          await onSubmit(values as unknown as TSchema, {
+          await onSubmit(values as TSchema, {
             reset,
           });
 
@@ -130,7 +130,7 @@ export function createValidator<
   }
 
   function setValues(newValues: TValue) {
-    let v = flatten(newValues) as GenericObject;
+    let v = flatten<GenericObject, GenericObject>(newValues);
     let t = Object.keys(v).reduce<{ [key: string]: boolean }>((o, key) => {
       o[key] = true;
       return o;
@@ -160,7 +160,7 @@ export function createValidator<
   }
 
   function setErrors(newErrors: TError) {
-    let e = flatten(newErrors) as GenericObject;
+    let e = flatten<GenericObject, GenericObject>(newErrors);
     let t = Object.keys(e).reduce<{ [key: string]: boolean }>((o, key) => {
       o[key] = true;
       return o;
