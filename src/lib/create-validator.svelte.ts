@@ -63,12 +63,12 @@ export function createValidator<
 
   let values: GenericObject = $state.frozen(defaultValues);
   let touched: GenericObject = $state.frozen({});
-  let errors: GenericObject = $state.frozen({});
   let isSubmitting = $state(false);
 
-  $effect(function handleErrors() {
-    const v = unflatten(values);
-    const d = schema.safeParse(v);
+  let _errors: GenericObject = $state.frozen({});
+
+  const errors: GenericObject = $derived.by(() => {
+    const d = schema.safeParse(unflatten(values));
     const e: GenericObject = {};
 
     d.error?.errors.forEach((o) => {
@@ -77,7 +77,10 @@ export function createValidator<
       }
     });
 
-    errors = flatten(e);
+    return {
+      ..._errors,
+      ...e,
+    };
   });
 
   function form(props?: Record<string, any>) {
@@ -124,11 +127,6 @@ export function createValidator<
         },
       ) {
         props?.oninput?.(event);
-
-        touched = {
-          ...touched,
-          [key]: true,
-        };
 
         values = {
           ...values,
@@ -185,7 +183,7 @@ export function createValidator<
       [key]: true,
     };
 
-    errors = {
+    _errors = {
       ...errors,
       [key]: message,
     };
@@ -199,7 +197,7 @@ export function createValidator<
       ...toTouched(e),
     };
 
-    errors = {
+    _errors = {
       ...errors,
       ...e,
     };
@@ -207,8 +205,8 @@ export function createValidator<
 
   function reset() {
     values = defaultValues;
-    errors = {};
     touched = {};
+    _errors = {};
     isSubmitting = false;
   }
 
