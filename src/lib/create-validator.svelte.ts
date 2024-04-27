@@ -144,10 +144,7 @@ export function createValidator<
 
   function setValues(newValues: TValue) {
     const v = flatten<GenericObject, GenericObject>(newValues);
-    const t = Object.keys(v).reduce<Record<string, boolean>>((o, k) => {
-      o[k] = true;
-      return o;
-    }, {});
+    const t = toTouched(v);
 
     touched = {
       ...touched,
@@ -174,14 +171,10 @@ export function createValidator<
 
   function setErrors(newErrors: TError) {
     const e = flatten<GenericObject, GenericObject>(newErrors);
-    const t = Object.keys(e).reduce<Record<string, boolean>>((o, k) => {
-      o[k] = true;
-      return o;
-    }, {});
 
     touched = {
       ...touched,
-      ...t,
+      ...toTouched(e),
     };
 
     errors = {
@@ -218,4 +211,16 @@ export function createValidator<
       return isSubmitting;
     },
   };
+}
+
+/**
+ * @param subject flattened object
+ */
+function toTouched(subject: GenericObject) {
+  const i = Object.keys(subject);
+  const j: GenericObject = {};
+
+  i.forEach((k) => (j[k] = true));
+
+  return j;
 }
