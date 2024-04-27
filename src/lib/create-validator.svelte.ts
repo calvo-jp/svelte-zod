@@ -80,17 +80,20 @@ export function createValidator<
     errors = flatten(e);
   });
 
-  function form() {
+  function form(props?: Record<string, any>) {
     return {
+      ...props,
       novalidate: true,
-      async onsubmit(e: SubmitEvent) {
+      async onsubmit(event: SubmitEvent) {
         await tick();
 
-        if (isSubmitting) return e.preventDefault();
-        if (Object.values(errors).some(Boolean)) return e.preventDefault();
+        props?.onsubmit?.(event);
+
+        if (isSubmitting) return event.preventDefault();
+        if (Object.values(errors).some(Boolean)) return event.preventDefault();
 
         if (onSubmit) {
-          e.preventDefault();
+          event.preventDefault();
 
           isSubmitting = true;
 
@@ -108,19 +111,19 @@ export function createValidator<
     };
   }
 
-  function field(key: TKey, userProps?: { [key: string]: any }) {
+  function field(key: TKey, props?: Record<string, any>) {
     return {
-      ...userProps,
+      ...props,
       value: values[key],
       oninput(
         event: Event & {
-          currentTarget: {
+          currentTarget: EventTarget & {
             value: string;
             [key: string]: any;
           };
         },
       ) {
-        userProps?.oninput?.(event);
+        props?.oninput?.(event);
 
         touched = {
           ...touched,
@@ -129,18 +132,18 @@ export function createValidator<
 
         values = {
           ...values,
-          [key]: event.currentTarget.value,
+          [key]: event.currentTarget?.value,
         };
       },
       onblur(
         event: FocusEvent & {
-          currentTarget: {
+          currentTarget: EventTarget & {
             value: string;
             [key: string]: any;
           };
         },
       ) {
-        userProps?.onblur?.(event);
+        props?.onblur?.(event);
 
         touched = {
           ...touched,
