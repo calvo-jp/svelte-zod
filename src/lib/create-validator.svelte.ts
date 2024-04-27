@@ -104,6 +104,11 @@ export function createValidator<
     return {
       value: values[key],
       oninput(e: Event & { currentTarget: { value: string } }) {
+        touched = {
+          ...touched,
+          [key]: true,
+        };
+
         values = {
           ...values,
           [key]: e.currentTarget.value,
