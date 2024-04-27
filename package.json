@@ -2,6 +2,14 @@
   "name": "svelte-zod",
   "type": "module",
   "version": "0.0.1",
+  "description": "Svelte bindings for Zod",
+  "keywords": [
+    "svelte",
+    "zod",
+    "validation",
+    "schema",
+    "form"
+  ],
   "svelte": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
