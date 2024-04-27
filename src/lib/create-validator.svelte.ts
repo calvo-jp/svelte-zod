@@ -31,36 +31,31 @@ interface OnSubmitContext {
   reset: () => void;
 }
 
-type OnSubmitHandler<T> = (
-  data: T,
+type OnSubmitHandler<TData> = (
+  data: TData,
   context: OnSubmitContext,
 ) => void | Promise<void>;
 
-interface CreateValidatorConfig<T, S, D> {
-  schema: S;
-  onSubmit?: OnSubmitHandler<T>;
-  defaultValues?: D;
+interface CreateValidatorConfig<TData, TZodSchema, TDefaultValue> {
+  schema: TZodSchema;
+  onSubmit?: OnSubmitHandler<TData>;
+  defaultValues?: TDefaultValue;
 }
 
 export function createValidator<
-  S extends z.ZodObject<{}>,
-  T extends GenericObject = z.infer<S>,
-  /* keys */
-  K extends string = FlattenObjectKeys<T>,
-  /* values */
-  V extends GenericObject = DeepPartial<T>,
-  /* default values */
-  D extends GenericObject = DeepPartial<T>,
-  /* errors */
-  E extends GenericObject = DeepReplaceTypes<T, string>,
-  /* touched */
-  C extends GenericObject = DeepReplaceTypes<T, boolean>,
+  TZodSchema extends z.ZodObject<{}>,
+  TSchema extends GenericObject = z.infer<TZodSchema>,
+  TKey extends string = FlattenObjectKeys<TSchema>,
+  TValue extends GenericObject = DeepPartial<TSchema>,
+  TError extends GenericObject = DeepReplaceTypes<TSchema, string>,
+  TTouched extends GenericObject = DeepReplaceTypes<TSchema, boolean>,
+  TDefaultValue extends GenericObject = DeepPartial<TSchema>,
 >({
   /**/
   schema,
   onSubmit,
   defaultValues,
-}: CreateValidatorConfig<T, S, D>) {
+}: CreateValidatorConfig<TSchema, TZodSchema, TDefaultValue>) {
   let values: GenericObject = $state.frozen(flatten(defaultValues));
   let touched: GenericObject = $state.frozen({});
   let errors: GenericObject = $state.frozen({});
@@ -94,7 +89,7 @@ export function createValidator<
 
           isSubmitting = true;
 
-          await onSubmit(values as unknown as T, {
+          await onSubmit(values as unknown as TSchema, {
             reset,
           });
 
@@ -104,7 +99,7 @@ export function createValidator<
     };
   }
 
-  function field(key: K) {
+  function field(key: TKey) {
     return {
       value: values[key],
       oninput(e: Event & { currentTarget: { value: string } }) {
@@ -122,7 +117,7 @@ export function createValidator<
     };
   }
 
-  function setValue(key: K, value: any) {
+  function setValue(key: TKey, value: any) {
     touched = {
       ...touched,
       [key]: true,
@@ -134,7 +129,7 @@ export function createValidator<
     };
   }
 
-  function setValues(newValues: V) {
+  function setValues(newValues: TValue) {
     let v = flatten(newValues) as GenericObject;
     let t = Object.keys(v).reduce<{ [key: string]: boolean }>((o, key) => {
       o[key] = true;
@@ -152,7 +147,7 @@ export function createValidator<
     };
   }
 
-  function setError(key: K, error: string) {
+  function setError(key: TKey, message: string) {
     touched = {
       ...touched,
       [key]: true,
@@ -160,11 +155,11 @@ export function createValidator<
 
     errors = {
       ...errors,
-      [key]: error,
+      [key]: message,
     };
   }
 
-  function setErrors(newErrors: E) {
+  function setErrors(newErrors: TError) {
     let e = flatten(newErrors) as GenericObject;
     let t = Object.keys(e).reduce<{ [key: string]: boolean }>((o, key) => {
       o[key] = true;
@@ -197,13 +192,13 @@ export function createValidator<
     setError,
     setErrors,
     get values() {
-      return unflatten<GenericObject, V>(values);
+      return unflatten<GenericObject, TValue>(values);
     },
     get errors() {
-      return unflatten<GenericObject, E>(errors);
+      return unflatten<GenericObject, TError>(errors);
     },
     get touched() {
-      return unflatten<GenericObject, C>(touched);
+      return unflatten<GenericObject, TTouched>(touched);
     },
     get isSubmitting() {
       return isSubmitting;
