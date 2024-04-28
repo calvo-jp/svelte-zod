@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { enhance } from '$app/forms';
   import { z } from 'zod';
   import { createValidator } from '../lib/create-validator.svelte.js';
 
@@ -24,22 +25,16 @@
   $inspect('touched', v.touched);
 </script>
 
-<form method="post" {...v.form()}>
+<form method="post" action="/" use:enhance {...v.form()}>
   <div>
     <input placeholder="Email" {...v.field('email')} />
-
-    {#if v.errors.email}
-      <p>{v.errors.email}</p>
-    {/if}
+    <p>{v.errors.email}</p>
   </div>
   <div>
     <input placeholder="Password" {...v.field('password')} />
-
-    {#if v.errors.password}
-      <p>{v.errors.password}</p>
-    {/if}
+    <p>{v.errors.password}</p>
   </div>
   <div>
-    <button type="submit">Login</button>
+    <button type="submit" disabled={v.isSubmitting}>Login</button>
   </div>
 </form>
