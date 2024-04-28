@@ -215,11 +215,12 @@ export function createValidator<
     };
   }
 
-  function setTouched(path: TKey) {
-    touched = {
-      ...touched,
-      [path]: true,
-    };
+  function setTouched(...paths: TKey[]) {
+    const t = { ...touched };
+
+    paths.forEach((path) => (t[path] = true));
+
+    touched = t;
   }
 
   function reset() {
