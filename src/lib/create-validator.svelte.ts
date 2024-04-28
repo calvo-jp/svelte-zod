@@ -4,7 +4,6 @@ import { flatten } from './flatten.js';
 import { unflatten } from './unflatten.js';
 
 import { tick } from 'svelte';
-import type { SvelteHTMLElements } from 'svelte/elements';
 import type { z } from 'zod';
 import type {
   ErrorSchema,
@@ -31,9 +30,10 @@ export function createValidator<
     context: {
       reset: () => void;
       setError: (key: TKey, message: string) => void;
-      setValue: (key: TKey, value: unknown) => void;
+      setValue: (key: TKey, value: any) => void;
       setErrors: (errors: TError) => void;
       setValues: (values: TValue) => void;
+      setTouched: (...keys: TKey[]) => void;
     },
   ) => void | Promise<void>;
 }) {
@@ -77,7 +77,7 @@ export function createValidator<
 
   let isSubmitting = $state(false);
 
-  function form(props?: SvelteHTMLElements['form']) {
+  function form(props?: Record<string, any>) {
     return {
       ...props,
       novalidate: true,
@@ -101,29 +101,19 @@ export function createValidator<
           setValues,
           setError,
           setErrors,
+          setTouched,
         });
 
         isSubmitting = false;
       },
-    };
+    } as Record<string, any>;
   }
 
-  function field(
-    key: TKey,
-    props?:
-      | SvelteHTMLElements['input']
-      | SvelteHTMLElements['select']
-      | SvelteHTMLElements['textarea'],
-  ) {
+  function field(key: TKey, props?: Record<string, any>) {
     return {
       value: values[key],
-      onchange(
-        event: Event & {
-          currentTarget: EventTarget &
-            (HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
-        },
-      ) {
-        props?.onchange?.(event as any);
+      onchange(event: any) {
+        props?.onchange?.(event);
 
         _errors = {
           ..._errors,
@@ -132,26 +122,21 @@ export function createValidator<
 
         values = {
           ...values,
-          [key]: event.currentTarget?.value,
+          [key]: event.currentTarget.value,
         };
       },
-      onblur(
-        event: FocusEvent & {
-          currentTarget: EventTarget &
-            (HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
-        },
-      ) {
-        props?.onblur?.(event as any);
+      onblur(event: any) {
+        props?.onblur?.(event);
 
         touched = {
           ...touched,
           [key]: true,
         };
       },
-    };
+    } as Record<string, any>;
   }
 
-  function setValue(path: TKey, value: unknown) {
+  function setValue(path: TKey, value: any) {
     touched = {
       ...touched,
       [path]: true,
