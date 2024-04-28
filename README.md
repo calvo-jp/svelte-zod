@@ -32,7 +32,7 @@ npm install svelte-zod
   $inspect('touched', v.touched);
 </script>
 
-<form method="post" {...v.form()}>
+<form {...v.form()}>
   <div>
     <input placeholder="Email" {...v.field('email')} />
 
