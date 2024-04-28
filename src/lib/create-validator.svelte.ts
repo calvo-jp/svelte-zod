@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { tick } from 'svelte';
+import { flatten } from './flatten.js';
+import { unflatten } from './unflatten.js';
+
 import type { z } from 'zod';
-import { flatten, unflatten } from './flat.js';
 import type {
   ErrorSchema,
   FlattenObjectKeys,
