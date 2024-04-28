@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { tick } from 'svelte';
 import { flatten } from './flatten.js';
 import { unflatten } from './unflatten.js';
 
+import { tick } from 'svelte';
+import type { SvelteHTMLElements } from 'svelte/elements';
 import type { z } from 'zod';
 import type {
   ErrorSchema,
@@ -22,6 +23,7 @@ export function createValidator<
   TError extends GenericObject = ErrorSchema<TSchema>,
   TTouched extends GenericObject = TouchedSchema<TSchema>,
 >(config: {
+  /**/
   schema: TZodSchema;
   defaultValues?: TDefaultValue;
   onSubmit?: (
@@ -43,14 +45,13 @@ export function createValidator<
   } = $derived.by(() => {
     return {
       schema: config.schema,
-      onSubmit: config.onSubmit ?? function noop() {},
+      onSubmit: config.onSubmit,
       defaultValues: config.defaultValues ? flatten(config.defaultValues) : {},
     };
   });
 
   let values: GenericObject = $state.frozen(defaultValues);
   let touched: GenericObject = $state.frozen({});
-  let isSubmitting = $state(false);
 
   let _errors: GenericObject = $state.frozen({});
 
@@ -71,52 +72,58 @@ export function createValidator<
     return mergedErrors;
   });
 
-  function form(props?: Record<string, any>) {
+  const isDirty = $derived(Object.keys(touched).length > 0);
+  const isValid = $derived(Object.values(errors).every((v) => !v));
+
+  let isSubmitting = $state(false);
+
+  function form(props?: SvelteHTMLElements['form']) {
     return {
       ...props,
       novalidate: true,
-      async onsubmit(event: SubmitEvent) {
+      onsubmit: async (event: SubmitEvent) => {
+        event.preventDefault();
+
         touched = toTouchedSchema(values);
 
         await tick();
 
-        props?.onsubmit?.(event);
+        if (!isValid) return;
+        if (isSubmitting) return;
 
-        if (isSubmitting) return event.preventDefault();
-        if (Object.values(errors).some(Boolean)) return event.preventDefault();
+        isSubmitting = true;
 
-        if (onSubmit) {
-          event.preventDefault();
+        const fields = unflatten<GenericObject, TSchema>(values);
 
-          isSubmitting = true;
+        await onSubmit?.(fields, {
+          reset,
+          setValue,
+          setValues,
+          setError,
+          setErrors,
+        });
 
-          await onSubmit(unflatten<GenericObject, TSchema>(values), {
-            reset,
-            setValue,
-            setValues,
-            setError,
-            setErrors,
-          });
-
-          isSubmitting = false;
-        }
+        isSubmitting = false;
       },
     };
   }
 
-  function field(key: TKey, props?: Record<string, any>) {
+  function field(
+    key: TKey,
+    props?:
+      | SvelteHTMLElements['input']
+      | SvelteHTMLElements['select']
+      | SvelteHTMLElements['textarea'],
+  ) {
     return {
-      ...props,
       value: values[key],
-      oninput(
+      onchange(
         event: Event & {
-          currentTarget: EventTarget & {
-            value: string;
-            [key: string]: any;
-          };
+          currentTarget: EventTarget &
+            (HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
         },
       ) {
-        props?.oninput?.(event);
+        props?.onchange?.(event as any);
 
         _errors = {
           ..._errors,
@@ -130,13 +137,11 @@ export function createValidator<
       },
       onblur(
         event: FocusEvent & {
-          currentTarget: EventTarget & {
-            value: string;
-            [key: string]: any;
-          };
+          currentTarget: EventTarget &
+            (HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
         },
       ) {
-        props?.onblur?.(event);
+        props?.onblur?.(event as any);
 
         touched = {
           ...touched,
@@ -146,20 +151,20 @@ export function createValidator<
     };
   }
 
-  function setValue(key: TKey, value: unknown) {
+  function setValue(path: TKey, value: unknown) {
     touched = {
       ...touched,
-      [key]: true,
+      [path]: true,
     };
 
     values = {
       ...values,
-      [key]: value,
+      [path]: value,
     };
 
     _errors = {
       ..._errors,
-      [key]: undefined,
+      [path]: undefined,
     };
   }
 
@@ -184,15 +189,15 @@ export function createValidator<
     _errors = e;
   }
 
-  function setError(key: TKey, message: string) {
+  function setError(path: TKey, message: string) {
     touched = {
       ...touched,
-      [key]: true,
+      [path]: true,
     };
 
     _errors = {
       ...errors,
-      [key]: message,
+      [path]: message,
     };
   }
 
@@ -207,6 +212,13 @@ export function createValidator<
     _errors = {
       ...errors,
       ...e,
+    };
+  }
+
+  function setTouched(path: TKey) {
+    touched = {
+      ...touched,
+      [path]: true,
     };
   }
 
@@ -225,6 +237,7 @@ export function createValidator<
     setValues,
     setError,
     setErrors,
+    setTouched,
     get values() {
       return unflatten<GenericObject, TValue>(values);
     },
@@ -233,6 +246,12 @@ export function createValidator<
     },
     get touched() {
       return unflatten<GenericObject, TTouched>(touched);
+    },
+    get isDirty() {
+      return isDirty;
+    },
+    get isValid() {
+      return isValid;
     },
     get isSubmitting() {
       return isSubmitting;

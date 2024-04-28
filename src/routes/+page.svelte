@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { enhance } from '$app/forms';
   import { z } from 'zod';
   import { createValidator } from '../lib/create-validator.svelte.js';
 
@@ -10,10 +9,6 @@
 
   let v = createValidator({
     schema,
-    onSubmit(d) {
-      console.log('Success!');
-      console.log(d);
-    },
     defaultValues: {
       email: '',
       password: '',
@@ -25,13 +20,13 @@
   $inspect('touched', v.touched);
 </script>
 
-<form method="post" action="/" use:enhance {...v.form()}>
+<form {...v.form()}>
   <div>
-    <input placeholder="Email" {...v.field('email')} />
+    <input name="email" placeholder="Email" {...v.field('email')} />
     <p>{v.errors.email}</p>
   </div>
   <div>
-    <input placeholder="Password" {...v.field('password')} />
+    <input name="password" placeholder="Password" {...v.field('password')} />
     <p>{v.errors.password}</p>
   </div>
   <div>
