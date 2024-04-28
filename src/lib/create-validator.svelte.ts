@@ -1,39 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { tick } from 'svelte';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { flatten, unflatten } from './flat.js';
-
-type GenericObject = Record<string, unknown>;
-
-type FlattenObjectKeys<T extends GenericObject, K = keyof T> = K extends string
-  ? T[K] extends GenericObject
-    ? `${K}.${FlattenObjectKeys<T[K]>}`
-    : `${K}`
-  : never;
-
-type DeepPartial<T extends GenericObject> = T extends GenericObject
-  ? {
-      /* @ts-expect-error "FIXME: Type 'T[P]' does not satisfy the constraint 'GenericObject'" */
-      [P in keyof T]?: DeepPartial<T[P]>;
-    }
-  : T;
-
-type DeepReplaceTypes<T extends GenericObject, R> = T extends GenericObject
-  ? {
-      /* @ts-expect-error "FIXME: Type 'T[P]' does not satisfy the constraint 'GenericObject'" */
-      [P in keyof T]?: DeepReplaceTypes<T[P], R>;
-    }
-  : R;
+import type {
+  ErrorSchema,
+  FlattenObjectKeys,
+  GenericObject,
+  TouchedSchema,
+  ValueSchema,
+} from './types.js';
 
 export function createValidator<
   TZodSchema extends z.ZodObject<z.ZodRawShape>,
   TSchema extends GenericObject = z.infer<TZodSchema>,
   TKey extends string = FlattenObjectKeys<TSchema>,
-  TValue extends GenericObject = DeepPartial<TSchema>,
-  TError extends GenericObject = DeepReplaceTypes<TSchema, string>,
-  TTouched extends GenericObject = DeepReplaceTypes<TSchema, boolean>,
-  TDefaultValue extends GenericObject = DeepPartial<TSchema>,
+  TValue extends GenericObject = ValueSchema<TSchema>,
+  TDefaultValue extends GenericObject = ValueSchema<TSchema>,
+  TError extends GenericObject = ErrorSchema<TSchema>,
+  TTouched extends GenericObject = TouchedSchema<TSchema>,
 >(config: {
   schema: TZodSchema;
   defaultValues?: TDefaultValue;
@@ -89,7 +74,7 @@ export function createValidator<
       ...props,
       novalidate: true,
       async onsubmit(event: SubmitEvent) {
-        touched = toTouched(values);
+        touched = toTouchedSchema(values);
 
         await tick();
 
@@ -171,7 +156,7 @@ export function createValidator<
 
     touched = {
       ...touched,
-      ...toTouched(v),
+      ...toTouchedSchema(v),
     };
 
     values = {
@@ -197,7 +182,7 @@ export function createValidator<
 
     touched = {
       ...touched,
-      ...toTouched(e),
+      ...toTouchedSchema(e),
     };
 
     _errors = {
@@ -236,11 +221,8 @@ export function createValidator<
   };
 }
 
-/**
- * @param subject flattened object
- */
-function toTouched(subject: GenericObject) {
-  const i = Object.keys(subject);
+function toTouchedSchema(o: GenericObject) {
+  const i = Object.keys(o);
   const j: GenericObject = {};
 
   i.forEach((k) => (j[k] = true));

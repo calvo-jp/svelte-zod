@@ -1,10 +1,14 @@
 import * as f from 'flat';
 import { createLruCache } from './lru-cache.js';
+import type { GenericObject } from './types.js';
 
-const cache_0 = createLruCache(100);
-const cache_1 = createLruCache(100);
+const cache_0 = createLruCache<GenericObject, GenericObject>(100);
+const cache_1 = createLruCache<GenericObject, GenericObject>(100);
 
-export function flatten<T, R>(target: T, opts?: f.FlattenOptions) {
+export function flatten<T extends GenericObject, R extends GenericObject>(
+  target: T,
+  opts?: f.FlattenOptions,
+) {
   let cached = cache_0.get(target) as R | undefined;
 
   if (cached) {
@@ -16,7 +20,10 @@ export function flatten<T, R>(target: T, opts?: f.FlattenOptions) {
   return cached;
 }
 
-export function unflatten<T, R>(target: T, opts?: f.UnflattenOptions) {
+export function unflatten<T extends GenericObject, R extends GenericObject>(
+  target: T,
+  opts?: f.UnflattenOptions,
+) {
   let cached = cache_1.get(target) as R | undefined;
 
   if (cached) {
