@@ -48,7 +48,7 @@ npm install svelte-zod
     {/if}
   </div>
   <div>
-    <button type="submit">Login</button>
+    <button type="submit" disabled={v.isSubmitting}>Login</button>
   </div>
 </form>
 ```
