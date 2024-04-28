@@ -116,6 +116,11 @@ export function createValidator<
       ) {
         props?.oninput?.(event);
 
+        _errors = {
+          ..._errors,
+          [key]: undefined,
+        };
+
         values = {
           ...values,
           [key]: event.currentTarget?.value,
@@ -149,6 +154,11 @@ export function createValidator<
       ...values,
       [key]: value,
     };
+
+    _errors = {
+      ..._errors,
+      [key]: undefined,
+    };
   }
 
   function setValues(newValues: TValue) {
@@ -163,6 +173,13 @@ export function createValidator<
       ...values,
       ...v,
     };
+
+    const e = { ..._errors };
+    const l = Object.keys(e);
+
+    l.forEach((k) => delete e[k]);
+
+    _errors = e;
   }
 
   function setError(key: TKey, message: string) {
