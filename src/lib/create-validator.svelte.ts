@@ -77,11 +77,15 @@ export function createValidator<
 
   let isSubmitting = $state(false);
 
-  function form(props?: Record<string, any>) {
+  function form(props?: {
+    novalidate?: boolean;
+    onsubmit?: (e: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }) => void;
+  }) {
     return {
       ...props,
       novalidate: true,
-      onsubmit: async (event: SubmitEvent) => {
+      onsubmit: async (event: any) => {
+        props?.onsubmit?.(event);
         event.preventDefault();
 
         touched = toTouchedSchema(values);
@@ -109,9 +113,21 @@ export function createValidator<
     } as Record<string, any>;
   }
 
-  function field(key: TKey, props?: Record<string, any>) {
+  function field<T = HTMLElement>(
+    key: TKey,
+    props?: {
+      value?: string;
+      onblur?: (e: Event & { currentTarget: EventTarget & T }) => void;
+      oninput?: (e: FocusEvent & { currentTarget: EventTarget & T }) => void;
+      'aria-invalid'?: boolean | string;
+      'aria-errormessage'?: string;
+    },
+  ) {
     return {
       value: values[key],
+      'aria-invalid': errors[key] ? true : undefined,
+      'aria-errormessage': errors[key],
+      ...props,
       oninput(event: any) {
         props?.oninput?.(event);
 
@@ -133,8 +149,6 @@ export function createValidator<
           [key]: true,
         };
       },
-      'aria-invalid': errors[key] ? true : undefined,
-      'aria-errormessage': errors[key],
     } as Record<string, any>;
   }
 

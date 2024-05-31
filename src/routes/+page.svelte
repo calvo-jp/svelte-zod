@@ -21,7 +21,11 @@
 
 <form {...v.form()}>
   <div>
-    <input name="email" placeholder="Email" {...v.field('email')} />
+    <input name="email" placeholder="Email" {...v.field<HTMLInputElement>('email',{
+      oninput(e){
+        console.log(e.currentTarget.value)
+      }
+    })}/>
     <p>{v.errors.email}</p>
   </div>
   <div>
