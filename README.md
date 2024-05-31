@@ -1,4 +1,4 @@
-# [WIP] Svelte Zod
+# Svelte Zod
 
 ## Installation
 
