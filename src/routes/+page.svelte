@@ -13,11 +13,10 @@
       email: '',
       password: '',
     },
+    onSubmit(data) {
+      console.log(data);
+    },
   });
-
-  $inspect('errors', v.errors);
-  $inspect('values', v.values);
-  $inspect('touched', v.touched);
 </script>
 
 <form {...v.form()}>

@@ -112,8 +112,8 @@ export function createValidator<
   function field(key: TKey, props?: Record<string, any>) {
     return {
       value: values[key],
-      onchange(event: any) {
-        props?.onchange?.(event);
+      oninput(event: any) {
+        props?.oninput?.(event);
 
         _errors = {
           ..._errors,
