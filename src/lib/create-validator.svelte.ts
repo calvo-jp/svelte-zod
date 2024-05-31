@@ -133,6 +133,8 @@ export function createValidator<
           [key]: true,
         };
       },
+      'aria-invalid': errors[key] ? true : undefined,
+      'aria-errormessage': errors[key],
     } as Record<string, any>;
   }
 
