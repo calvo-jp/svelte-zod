@@ -1,7 +1,7 @@
 {
   "name": "svelte-zod",
   "type": "module",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Svelte bindings for Zod",
   "keywords": [
     "Svelte",
